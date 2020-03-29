@@ -1,0 +1,10 @@
+#login-form {
+  background: rgb(0, 0, 0, 0.5);
+  padding: 20px 20px;
+  width: 400px;
+  height: 400px;
+}
+.icon {
+  width: 50px;
+  text-align: center;
+}

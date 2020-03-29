@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2015",
+    "esModuleInterop": true,
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "rootDir": "server",
+    "outDir": "build",
+    "noImplicitAny": false,
+    "jsx": "react",
+    "sourceMap": true,
+    "strictNullChecks": true
+  },
+  "include": [
+    "server/**/*.ts",
+  ],
+  "exclude": [
+    "./node_modules"
+  ]
+}
