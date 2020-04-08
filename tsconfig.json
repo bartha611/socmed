@@ -1,23 +1,15 @@
 {
+  "compileOnSave": true,
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2015",
     "esModuleInterop": true,
-    "lib": [
-      "es6",
-      "dom"
-    ],
-    "rootDir": "server",
-    "outDir": "build",
+    "lib": ["es6", "dom"],
     "noImplicitAny": false,
     "jsx": "react",
     "sourceMap": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "typeRoots": ["./node_modules/@types", "./server/interfaces"]
   },
-  "include": [
-    "server/**/*.ts",
-  ],
-  "exclude": [
-    "./node_modules"
-  ]
+  "exclude": ["./node_modules"]
 }
