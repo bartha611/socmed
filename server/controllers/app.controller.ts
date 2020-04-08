@@ -3,6 +3,7 @@ import * as bodyParser from "body-parser";
 
 import PostController from "./post.controller";
 import AuthController from "./auth.controller";
+import CommentController from "./comment.controller";
 
 export default class App {
   public app: express.Application;
@@ -20,12 +21,14 @@ export default class App {
   private routes(): void {
     const postRouter = new PostController();
     const authRouter = new AuthController();
+    const commentRouter = new CommentController();
 
+    this.app.use("/", postRouter.router);
+    this.app.use("/", authRouter.router);
+    this.app.use("/", commentRouter.router);
     this.app.get("*", (req: express.Request, res: express.Response) => {
       res.sendFile(`../../client/dist/index.html`);
     });
-    this.app.use("/", postRouter.router);
-    this.app.use("/", authRouter.router);
   }
   public listen(): void {
     this.app.listen(this.PORT, () => {

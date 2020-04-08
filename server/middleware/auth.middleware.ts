@@ -26,6 +26,7 @@ const authenticate = async (
       if (response.rowCount === 0) {
         res.status(403).send("You are not authorized");
       } else {
+        req.userId = verificationToken.id;
         next();
       }
     } catch (err) {
