@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS Likes(
+  id SERIAL PRIMARY KEY,
+  userid uuid REFERENCES Customer(id) ON DELETE CASCADE,
+  postid int REFERENCES Post(id) ON DELETE CASCADE
+)

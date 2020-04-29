@@ -1,11 +1,20 @@
-import { User } from "./user.types";
-
+export interface CommentResponse {
+  id: number;
+  comment: string;
+  userid: string;
+  postid: number;
+  createdat: Date;
+  updatedat: Date;
+}
 export interface Comment {
   id: number;
-  user: User;
-  date: Date;
   comment: string;
-  likes: number;
+  postid: number;
+  userid: string;
+  username: string;
+  profile_photo: string;
+  createdat: Date;
+  updatedat: Date;
 }
 
 export interface NewComment {

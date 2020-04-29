@@ -1,10 +1,9 @@
 import * as express from "express";
 import * as jwt from "jsonwebtoken";
 import * as bcrypt from "bcryptjs";
-import { QueryResult } from "pg";
 import * as types from "../interfaces/user.types";
-import pool from "../pool";
 import { Controller } from "../interfaces/controller.interface";
+import UserService from "../helpers/userService";
 
 export default class AuthController implements Controller {
   public path = "/api/auth";
@@ -15,44 +14,51 @@ export default class AuthController implements Controller {
   private initializeRoutes = (): void => {
     this.router.post(`${this.path}/login`, this.login);
     this.router.post(`${this.path}/register`, this.register);
+    this.router.delete(`${this.path}/:id`, this.delete);
+  };
+  private delete = async (
+    req: express.Request,
+    res: express.Response
+  ): Promise<void> => {
+    const { id } = req.params;
+    try {
+      const userService = new UserService();
+      await userService.deleteUser(id);
+      res.status(200).send(id);
+    } catch (err) {
+      console.log(err);
+      res.status(500).send("error");
+    }
   };
   private login = async (
     req: express.Request,
     res: express.Response
   ): Promise<void> => {
     const user: types.Login = req.body;
-    const client = await pool.connect();
+    const userService = new UserService();
     try {
-      const queryText = `SELECT id, username, password FROM Customer WHERE email = $1`;
-      const response: QueryResult<types.UserResult> = await client.query(
-        queryText,
-        [user.email]
+      const response: types.User | undefined = await userService.findByEmail(
+        user.email
       );
-      if (response.rowCount === 0) {
-        res.sendStatus(404);
+      if (!response) {
+        res.status(403).send("Login failure");
       } else {
-        const match = await bcrypt.compare(
-          user.password,
-          response.rows[0].password
-        );
+        const match = await bcrypt.compare(user.password, response.password);
         if (!match) {
-          res.sendStatus(403);
+          res.status(403).send("Login Failure");
         } else {
-          const accessToken = jwt.sign(
-            { id: response.rows[0].id },
-            process.env.JWT_TOKEN,
-            { expiresIn: "24h" }
-          );
+          const token = jwt.sign({ id: response.id }, process.env.JWT_TOKEN, {
+            expiresIn: "24h",
+          });
           res.status(200).send({
-            user: response.rows[0].username,
-            jwt: accessToken,
+            user: response.username,
+            jwt: token,
           });
         }
       }
     } catch (err) {
-      res.sendStatus(500);
-    } finally {
-      client.release();
+      console.log(err);
+      res.status(500).send(err);
     }
   };
   private register = async (
@@ -60,33 +66,30 @@ export default class AuthController implements Controller {
     res: express.Response
   ): Promise<void> => {
     const user: types.Register = req.body;
-    let client;
+    const userService = new UserService();
     try {
-      client = await pool.connect();
-      const queryText = `SELECT * FROM CUSTOMER WHERE email = $1`;
-      const response = await client.query(queryText, [user.email]);
-      if (response.rowCount !== 0) {
-        res.status(403).send("Email has already been used");
+      const response: types.User | undefined = await userService.findByEmail(
+        user.email
+      );
+      if (response) {
+        res.sendStatus(403);
       } else {
         const hashedPassword = await bcrypt.hash(user.password, 10);
-        const result: QueryResult<types.User> = await client.query(
-          `INSERT INTO CUSTOMER(username, password, email) VALUES ($1, $2, $3) RETURNING id, username`,
-          [user.username, hashedPassword, user.email]
-        );
-        const accessToken = jwt.sign(
-          { id: result.rows[0].id },
-          process.env.JWT_TOKEN,
-          { expiresIn: "24h" }
-        );
+        const userResponse: types.User = await userService.insertUser({
+          ...user,
+          password: hashedPassword,
+        });
+        const token = jwt.sign({ id: userResponse.id }, process.env.JWT_TOKEN, {
+          expiresIn: "24h",
+        });
         res.status(200).send({
-          jwt: accessToken,
-          user: result.rows[0].username,
+          jwt: token,
+          user: userResponse.username,
         });
       }
     } catch (err) {
+      console.log(err);
       res.status(500).send(err);
-    } finally {
-      client.release();
     }
   };
 }
